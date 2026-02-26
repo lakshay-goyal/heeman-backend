@@ -15,13 +15,21 @@ export class ProductController {
     });
 
     createProduct = asyncHandler(async (req: Request, res: Response) => {
-        const product = await productService.createProduct(req.body);
+        const productData = {
+            ...req.body,
+            price: req.body.price ? parseFloat(req.body.price.toString()) : 0,
+        };
+        const product = await productService.createProduct(productData);
         res.status(201).json(product);
     });
 
     updateProduct = asyncHandler(async (req: Request, res: Response) => {
         const id = req.params.id as string;
-        const product = await productService.updateProduct(id, req.body);
+        const productData = {
+            ...req.body,
+            price: req.body.price ? parseFloat(req.body.price.toString()) : undefined,
+        };
+        const product = await productService.updateProduct(id, productData);
         res.json(product);
     });
 
