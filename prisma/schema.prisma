@@ -24,6 +24,7 @@ model User {
   role          String? // For admin/user roles
   sessions      Session[]
   accounts      Account[]
+  coupons       Coupon[]  @relation("UserCoupons")
 
   @@map("user")
 }
@@ -96,6 +97,9 @@ model Product {
   includedComponents String[]
   careInstructions   String?
 
+  // Coupons
+  coupons Coupon[] @relation("ProductCoupons")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -107,4 +111,33 @@ model ProductImage {
 
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Coupon {
+  id            String       @id @default(uuid())
+  code          String       @unique
+  discountType  DiscountType
+  discountValue Float
+  isActive      Boolean      @default(true)
+  isVisible     Boolean      @default(true) // Public vs Private coupon
+  validFrom     DateTime     @default(now())
+  validUntil    DateTime?
+  usageLimit    Int?
+  usedCount     Int          @default(0)
+
+  // Products associated with this coupon
+  // If empty, it applies to all products (logical check in code)
+  products Product[] @relation("ProductCoupons")
+
+  // Target users associated with this coupon
+  // If empty, it applies to any user (logical check in code)
+  users User[] @relation("UserCoupons")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
 }
