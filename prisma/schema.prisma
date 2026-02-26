@@ -18,3 +18,39 @@ model User {
   email String  @unique
   name  String?
 }
+
+model Product {
+  id              String         @id @default(uuid())
+  productId       String         @unique
+  name            String
+  series          String?
+  description     String
+  price           Float
+  images          ProductImage[]
+  colors          String[]
+  aboutItem       String
+  specialFeatures String[]
+  tags            String[]
+
+  // Specs
+  productMaterial    String?
+  productDimension   String?
+  material           String?
+  weight             String?
+  height             String?
+  styleAndPatterns   String?
+  includedComponents String[]
+  careInstructions   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductImage {
+  id    String  @id @default(uuid())
+  url   String
+  color String?
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
