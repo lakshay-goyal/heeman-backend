@@ -6,7 +6,8 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --watch src/index.ts",
-    "seed": "bun run src/seed.ts"
+    "seed": "bun run src/seed.ts",
+    "build": "prisma generate && prisma migrate deploy && bun build src/index.ts --compile --outfile heeman-backend"
   },
   "devDependencies": {
     "@types/bun": "latest",
