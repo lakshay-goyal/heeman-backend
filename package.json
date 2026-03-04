@@ -7,7 +7,7 @@
     "start": "bun run src/index.ts",
     "dev": "bun --watch src/index.ts",
     "seed": "bun run src/seed.ts",
-    "build": "bunx prisma migrate dev && bunx prisma generate && bun --watch src/index.ts"
+    "build": "bun x prisma migrate deploy && bun x prisma generate && bun src/index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
