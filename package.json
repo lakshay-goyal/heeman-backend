@@ -7,20 +7,20 @@
     "start": "bun run src/index.ts",
     "dev": "bun --watch src/index.ts",
     "seed": "bun run src/seed.ts",
-    "build": "bunx prisma migrate dev && bunx prisma generate && bun build src/index.ts --compile --outfile heeman-backend"
+    "build": "bunx prisma migrate dev && bunx prisma generate && bun --watch src/index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/nodemailer": "^7.0.11",
     "@types/pg": "^8.16.0",
-    "prisma": "^7.4.1"
+    "prisma": "^7.4.2"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.1",
-    "@prisma/client": "^7.4.1",
+    "@prisma/client": "^7.4.2",
     "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
