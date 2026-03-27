@@ -11,6 +11,7 @@ export class ProductService {
                 price: true,
                 tags: true,
                 series: true,
+                isTopProduct: true,
                 images: {
                     take: 1,
                     select: {

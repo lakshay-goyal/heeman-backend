@@ -86,6 +86,7 @@ model Product {
   aboutItem       String
   specialFeatures String[]
   tags            String[]
+  isTopProduct    Boolean @default(false)
 
   // Specs
   productMaterial    String?
