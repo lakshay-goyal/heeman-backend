@@ -14,4 +14,7 @@ export const ENV = {
     SMTP_USER: process.env.SMTP_USER!,
     SMTP_PASS: process.env.SMTP_PASS!,
     SMTP_FROM: process.env.SMTP_FROM!,
+    SUPABASE_URL: process.env.SUPABASE_URL!,
+    SUPABASE_KEY: process.env.SUPABASE_KEY!,
+    SUPABASE_BUCKET: process.env.SUPABASE_BUCKET!,
 } as const;
