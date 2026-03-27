@@ -82,11 +82,13 @@ model Product {
   description     String
   price           Float
   images          ProductImage[]
+  categoryId      String?
+  category        Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   colors          String[]
   aboutItem       String
   specialFeatures String[]
   tags            String[]
-  isTopProduct    Boolean @default(false)
+  isTopProduct    Boolean        @default(false)
 
   // Specs
   productMaterial    String?
@@ -141,4 +143,13 @@ model Coupon {
 enum DiscountType {
   PERCENTAGE
   FIXED
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }

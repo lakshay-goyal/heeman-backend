@@ -13,6 +13,7 @@ export interface CreateProductDTO {
     specialFeatures?: string[];
     tags?: string[];
     isTopProduct?: boolean;
+    categoryId?: string;
     colors?: string[];
     productMaterial?: string;
     productDimension?: string;

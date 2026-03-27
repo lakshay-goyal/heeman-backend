@@ -5,6 +5,7 @@ import productRoutes from "./routes/product.routes";
 import userRoutes from "./routes/user.routes";
 import couponRoutes from "./routes/coupon.routes";
 import contactRoutes from "./routes/contact.routes";
+import categoryRoutes from "./routes/category.routes";
 import { errorHandler } from "./middlewares/errorHandler";
 import { requestLogger } from "./middlewares/logger";
 
@@ -54,6 +55,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/categories", categoryRoutes);
 
 // Error Handling
 app.use(errorHandler);

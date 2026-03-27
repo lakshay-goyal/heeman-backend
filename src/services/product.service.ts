@@ -12,6 +12,8 @@ export class ProductService {
                 tags: true,
                 series: true,
                 isTopProduct: true,
+                categoryId: true,
+                category: true,
                 images: {
                     take: 1,
                     select: {
@@ -27,6 +29,7 @@ export class ProductService {
             where: { id },
             include: {
                 images: true,
+                category: true,
             },
         });
 
