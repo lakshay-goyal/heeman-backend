@@ -55,6 +55,7 @@ app.get("/api/me", async (req, res) => {
 import wishlistRoutes from "./routes/wishlist.routes";
 import enquiryRoutes from "./routes/enquiry.routes";
 import verifyRoutes from "./routes/verify.routes";
+import billingRoutes from "./routes/billing.routes";
 
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
@@ -65,6 +66,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/enquiry", enquiryRoutes);
 app.use("/api/verify", verifyRoutes);
+app.use("/api/billing", billingRoutes);
 
 // Error Handling
 app.use(errorHandler);

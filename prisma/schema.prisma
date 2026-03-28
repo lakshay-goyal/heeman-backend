@@ -162,6 +162,22 @@ model Category {
   updatedAt   DateTime  @updatedAt
 }
 
+// Single-row settings table — always upsert on the fixed id "global"
+model BillingConfig {
+  id                    String   @id @default("global")
+  gstPercent            Float    @default(18)
+  gstLabel              String   @default("GST")
+  shippingCharge        Float    @default(150)
+  freeShippingThreshold Float    @default(5000)
+  shippingLabel         String   @default("Delivery Charges")
+  handlingCharge        Float    @default(0)
+  handlingLabel         String   @default("Production Handling")
+  extraCharges          Json     @default("[]") // [{label, amount, percent}]
+  updatedAt             DateTime @updatedAt
+
+  @@map("billing_config")
+}
+
 model CustomEnquiry {
   id        String   @id @default(uuid())
   name      String
