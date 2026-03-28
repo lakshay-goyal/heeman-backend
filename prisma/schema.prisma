@@ -161,3 +161,23 @@ model Category {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
+
+model CustomEnquiry {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  message   String
+  images    String[] // Supabase public URLs
+  status    EnquiryStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("custom_enquiry")
+}
+
+enum EnquiryStatus {
+  PENDING
+  REVIEWED
+  COMPLETED
+}

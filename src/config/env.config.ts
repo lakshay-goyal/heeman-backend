@@ -17,4 +17,6 @@ export const ENV = {
     SUPABASE_URL: process.env.SUPABASE_URL!,
     SUPABASE_KEY: process.env.SUPABASE_KEY!,
     SUPABASE_BUCKET: process.env.SUPABASE_BUCKET!,
+    MSG91_AUTH_KEY: process.env.MSG91_AUTH_KEY!,
+    MSG91_TEMPLATE_ID: process.env.MSG91_TEMPLATE_ID!,
 } as const;
