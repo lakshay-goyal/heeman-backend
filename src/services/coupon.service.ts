@@ -64,12 +64,33 @@ export class CouponService {
         });
     }
 
+    async getGlobalCoupon() {
+        return prisma.coupon.findFirst({
+            where: {
+                isGlobal: true,
+                isActive: true,
+                OR: [
+                    { validUntil: null },
+                    { validUntil: { gte: new Date() } } // Only valid ones
+                ]
+            }
+        });
+    }
+
     async createCoupon(data: CreateCouponDTO) {
-        const { productIds, userIds, ...couponData } = data;
+        const { productIds, userIds, isGlobal, ...couponData } = data;
+
+        if (isGlobal) {
+            await prisma.coupon.updateMany({
+                where: { isGlobal: true },
+                data: { isGlobal: false }
+            });
+        }
 
         return prisma.coupon.create({
             data: {
                 ...couponData,
+                isGlobal: isGlobal ?? false,
                 products: productIds ? {
                     connect: productIds.map(id => ({ id }))
                 } : undefined,
@@ -91,9 +112,19 @@ export class CouponService {
     }
 
     async updateCoupon(id: string, data: UpdateCouponDTO) {
-        const { productIds, userIds, ...couponData } = data;
+        const { productIds, userIds, isGlobal, ...couponData } = data;
 
         let updateData: any = { ...couponData };
+
+        if (isGlobal !== undefined) {
+            updateData.isGlobal = isGlobal;
+            if (isGlobal) {
+                await prisma.coupon.updateMany({
+                    where: { isGlobal: true, id: { not: id } },
+                    data: { isGlobal: false }
+                });
+            }
+        }
 
         if (productIds) {
             updateData.products = {

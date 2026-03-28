@@ -14,6 +14,12 @@ export class CouponController {
         res.json(coupon);
     });
 
+    getGlobalCoupon = asyncHandler(async (req: Request, res: Response) => {
+        const coupon = await couponService.getGlobalCoupon();
+        if(!coupon) return res.status(200).json(null);
+        res.json(coupon);
+    });
+
     getCouponByCode = asyncHandler(async (req: Request, res: Response) => {
         const code = req.params.code as string;
         const coupon = await couponService.getCouponByCode(code);
@@ -38,6 +44,7 @@ export class CouponController {
             validFrom: req.body.validFrom ? new Date(req.body.validFrom) : new Date(),
             validUntil: req.body.validUntil ? new Date(req.body.validUntil) : null,
             userIds: Array.isArray(req.body.userIds) ? req.body.userIds : undefined,
+            isGlobal: req.body.isGlobal === true,
         };
         // Clean up any remaining fields not needed
         delete couponData.minOrderAmount;
@@ -56,6 +63,7 @@ export class CouponController {
             validFrom: req.body.validFrom ? new Date(req.body.validFrom) : undefined,
             validUntil: req.body.validUntil !== undefined ? (req.body.validUntil ? new Date(req.body.validUntil) : null) : undefined,
             userIds: req.body.userIds !== undefined ? (Array.isArray(req.body.userIds) ? req.body.userIds : []) : undefined,
+            isGlobal: req.body.isGlobal !== undefined ? req.body.isGlobal === true : undefined,
         };
         // Clean up
         delete couponData.minOrderAmount;

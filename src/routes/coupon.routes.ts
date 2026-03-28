@@ -4,6 +4,7 @@ import { couponController } from "../controllers/coupon.controller";
 const router = Router();
 
 router.get("/", couponController.getAllCoupons);
+router.get("/global", couponController.getGlobalCoupon);
 router.get("/:id", couponController.getCouponById);
 router.get("/code/:code", couponController.getCouponByCode);
 router.post("/", couponController.createCoupon);

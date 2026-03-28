@@ -11,6 +11,7 @@ export interface CreateCouponDTO {
     usageLimit?: number | null;
     productIds?: string[];
     userIds?: string[];
+    isGlobal?: boolean;
 }
 
 export interface UpdateCouponDTO extends Partial<CreateCouponDTO> { }
