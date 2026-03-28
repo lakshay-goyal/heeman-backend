@@ -132,6 +132,8 @@ model Coupon {
   usageLimit    Int?
   usedCount     Int          @default(0)
   isGlobal      Boolean      @default(false)
+  minOrderAmount Float?      // Minimum cart value required to unlock
+  minItemCount   Int?         // Minimum number of items required to unlock
 
   // Products associated with this coupon
   // If empty, it applies to all products (logical check in code)

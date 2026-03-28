@@ -14,6 +14,12 @@ export class CouponController {
         res.json(coupon);
     });
 
+    getAvailableCoupons = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.query.userId as string | undefined;
+        const coupons = await couponService.getAvailableCoupons(userId);
+        res.json(coupons);
+    });
+
     getGlobalCoupon = asyncHandler(async (req: Request, res: Response) => {
         const coupon = await couponService.getGlobalCoupon();
         if(!coupon) return res.status(200).json(null);
@@ -45,9 +51,10 @@ export class CouponController {
             validUntil: req.body.validUntil ? new Date(req.body.validUntil) : null,
             userIds: Array.isArray(req.body.userIds) ? req.body.userIds : undefined,
             isGlobal: req.body.isGlobal === true,
+            minOrderAmount: req.body.minOrderAmount ? parseFloat(req.body.minOrderAmount.toString()) : null,
+            minItemCount: req.body.minItemCount ? parseInt(req.body.minItemCount.toString()) : null,
         };
         // Clean up any remaining fields not needed
-        delete couponData.minOrderAmount;
         delete couponData.maxDiscount;
         delete couponData.userId;
         const coupon = await couponService.createCoupon(couponData);
@@ -64,9 +71,10 @@ export class CouponController {
             validUntil: req.body.validUntil !== undefined ? (req.body.validUntil ? new Date(req.body.validUntil) : null) : undefined,
             userIds: req.body.userIds !== undefined ? (Array.isArray(req.body.userIds) ? req.body.userIds : []) : undefined,
             isGlobal: req.body.isGlobal !== undefined ? req.body.isGlobal === true : undefined,
+            minOrderAmount: req.body.minOrderAmount !== undefined ? (req.body.minOrderAmount ? parseFloat(req.body.minOrderAmount.toString()) : null) : undefined,
+            minItemCount: req.body.minItemCount !== undefined ? (req.body.minItemCount ? parseInt(req.body.minItemCount.toString()) : null) : undefined,
         };
         // Clean up
-        delete couponData.minOrderAmount;
         delete couponData.maxDiscount;
         delete couponData.userId;
         const coupon = await couponService.updateCoupon(id, couponData);

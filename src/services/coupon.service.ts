@@ -64,6 +64,51 @@ export class CouponService {
         });
     }
 
+    async getAvailableCoupons(userId?: string) {
+        const now = new Date();
+
+        const whereClause: any = {
+            isActive: true,
+            isVisible: true,
+            OR: [
+                { validUntil: null },
+                { validUntil: { gte: now } }
+            ],
+        };
+
+        // If userId provided, include coupons for that user + universal ones
+        // Otherwise only return universal (no user restriction) coupons
+        if (userId) {
+            whereClause.AND = [{
+                OR: [
+                    { users: { none: {} } },
+                    { users: { some: { id: userId } } }
+                ]
+            }];
+        } else {
+            whereClause.users = { none: {} };
+        }
+
+        return prisma.coupon.findMany({
+            where: whereClause,
+            select: {
+                id: true,
+                code: true,
+                discountType: true,
+                discountValue: true,
+                minOrderAmount: true,
+                minItemCount: true,
+                validUntil: true,
+                usageLimit: true,
+                usedCount: true,
+            },
+            orderBy: [
+                { minOrderAmount: 'asc' },
+                { minItemCount: 'asc' },
+            ]
+        });
+    }
+
     async getGlobalCoupon() {
         return prisma.coupon.findFirst({
             where: {
