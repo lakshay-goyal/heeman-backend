@@ -55,10 +55,10 @@ export const landingConstants = {
         title: "The Curator's Selection",
         description: "Discover our most sought-after pieces, handpicked for their unique design and exceptional material quality.",
         products: [
-            { name: "Velvet Lounge Sofa", price: "$2,499", tag: "Best Seller", img: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&q=80&w=800", rating: 4.9 },
-            { name: "Nordic Oak Dining", price: "$1,850", tag: "New Arrival", img: "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&q=80&w=800", rating: 4.8 },
-            { name: "Minimalist Pendant", price: "$420", tag: "Luxury", img: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&q=80&w=800", rating: 4.7 },
-            { name: "Walnut Coffee Table", price: "$890", tag: "Artisan", img: "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&q=80&w=800", rating: 4.9 }
+            { name: "Velvet Lounge Sofa", price: "₹2,499", tag: "Best Seller", img: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&q=80&w=800", rating: 4.9 },
+            { name: "Nordic Oak Dining", price: "₹1,850", tag: "New Arrival", img: "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&q=80&w=800", rating: 4.8 },
+            { name: "Minimalist Pendant", price: "₹420", tag: "Luxury", img: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&q=80&w=800", rating: 4.7 },
+            { name: "Walnut Coffee Table", price: "₹890", tag: "Artisan", img: "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&q=80&w=800", rating: 4.9 }
         ],
         viewAllButton: "View All Series"
     },
