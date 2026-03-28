@@ -25,6 +25,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   coupons       Coupon[]  @relation("UserCoupons")
+  wishlist      Product[] @relation("UserWishlist")
 
   @@map("user")
 }
@@ -102,6 +103,9 @@ model Product {
 
   // Coupons
   coupons Coupon[] @relation("ProductCoupons")
+
+  // Wishlist
+  wishlistedBy User[] @relation("UserWishlist")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

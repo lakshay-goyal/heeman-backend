@@ -52,8 +52,11 @@ app.get("/api/me", async (req, res) => {
     return res.json(session);
 });
 
+import wishlistRoutes from "./routes/wishlist.routes";
+
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/categories", categoryRoutes);
