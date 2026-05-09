@@ -52,6 +52,8 @@ import wishlistRoutes from "./routes/wishlist.routes";
 import enquiryRoutes from "./routes/enquiry.routes";
 import verifyRoutes from "./routes/verify.routes";
 import billingRoutes from "./routes/billing.routes";
+import productEnquiryRoutes from "./routes/productEnquiry.routes";
+import whatsappRoutes from "./routes/whatsapp.routes";
 
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
@@ -61,7 +63,10 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/enquiry", enquiryRoutes);
+app.use("/api/leads", productEnquiryRoutes);
+app.use("/api/enquiries", productEnquiryRoutes);
 app.use("/api/verify", verifyRoutes);
+app.use("/api/whatsapp", whatsappRoutes);
 app.use("/api/billing", billingRoutes);
 
 // Error Handling

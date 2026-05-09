@@ -3,12 +3,33 @@ import { prisma } from "../lib/prisma";
 import { uploadToSupabase } from "../services/supabaseService";
 import { asyncHandler } from "../utils/asyncHandler";
 import { EnquiryStatus } from "../generated/prisma/enums";
+import { createProductEnquiry } from "../services/productEnquiry.service";
+import { sendWhatsAppTemplateForEnquiry } from "../services/whatsapp.service";
+import { getOptionalSession } from "../middlewares/authGuard";
+
+const getIp = (req: Request) => {
+    const forwarded = req.headers["x-forwarded-for"];
+    return Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(",")[0] || req.ip;
+};
 
 export const createEnquiry = asyncHandler(async (req: Request, res: Response) => {
-    const { name, email, phone, message } = req.body;
+    const {
+        name,
+        email,
+        phone,
+        message,
+        verificationToken,
+        whatsappConsent,
+        whatsappConsentText,
+    } = req.body;
 
     if (!name || !email || !message) {
         res.status(400).json({ success: false, error: "Name, email, and message are required." });
+        return;
+    }
+
+    if (!verificationToken) {
+        res.status(400).json({ success: false, error: "A valid verification proof is required." });
         return;
     }
 
@@ -24,17 +45,43 @@ export const createEnquiry = asyncHandler(async (req: Request, res: Response) =>
         }
     }
 
-    const enquiry = await prisma.customEnquiry.create({
-        data: {
+    try {
+        const session = await getOptionalSession(req);
+        const enquiry = await createProductEnquiry({
+            type: "CUSTOM",
+            userId: session?.user?.id,
             name,
             email,
-            phone: phone || null,
+            phone,
             message,
-            images: imageUrls,
-        },
-    });
+            verificationToken,
+            whatsappConsent: whatsappConsent === "true" || whatsappConsent === true,
+            whatsappConsentText,
+            referenceImages: imageUrls,
+            sourcePage: "custom-enquiry",
+            ipAddress: getIp(req),
+            userAgent: req.headers["user-agent"],
+        });
 
-    res.status(201).json({ success: true, enquiry });
+        let whatsapp: unknown = null;
+        if (enquiry.whatsappConsent) {
+            try {
+                whatsapp = await sendWhatsAppTemplateForEnquiry(enquiry.id);
+            } catch (error) {
+                whatsapp = {
+                    configured: true,
+                    error: error instanceof Error ? error.message : "WhatsApp template failed.",
+                };
+            }
+        }
+
+        res.status(201).json({ success: true, enquiry, whatsapp });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            error: error instanceof Error ? error.message : "Failed to submit enquiry.",
+        });
+    }
 });
 
 export const getEnquiries = asyncHandler(async (_req: Request, res: Response) => {

@@ -3,13 +3,23 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { sendPhoneOtp, verifyPhoneOtp, resendPhoneOtp } from "../services/msg91Service";
 import nodemailer from "nodemailer";
 import { ENV } from "../config/env.config";
-
-// In-memory store: email → { otp, expiresAt }
-const emailOtpStore = new Map<string, { otp: string; expiresAt: number }>();
+import { prisma } from "../lib/prisma";
+import {
+    cleanPhone,
+    createVerificationToken,
+    hashOtp,
+    hashValue,
+    verifySignedToken,
+} from "../services/verificationToken.service";
 
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+const getIp = (req: Request) => {
+    const forwarded = req.headers["x-forwarded-for"];
+    return Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(",")[0] || req.ip;
+};
 
 const transporter = nodemailer.createTransport({
     host: ENV.SMTP_HOST,
@@ -27,12 +37,24 @@ export const sendEmailOtp = asyncHandler(async (req: Request, res: Response) => 
         return;
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
     const otp = generateOtp();
-    emailOtpStore.set(email, { otp, expiresAt: Date.now() + OTP_TTL_MS });
+    const expiresAt = new Date(Date.now() + OTP_TTL_MS);
+
+    await prisma.enquiryVerification.create({
+        data: {
+            channel: "EMAIL",
+            email: normalizedEmail,
+            otpHash: hashOtp(normalizedEmail, otp),
+            expiresAt,
+            ipAddress: getIp(req),
+            userAgent: req.headers["user-agent"],
+        },
+    });
 
     await transporter.sendMail({
         from: ENV.SMTP_FROM,
-        to: email,
+        to: normalizedEmail,
         subject: "Heeman – Your Email Verification Code",
         html: `
             <div style="font-family: serif; max-width: 520px; margin: auto; padding: 48px 40px; border: 1px solid #eee;">
@@ -59,23 +81,65 @@ export const confirmEmailOtp = asyncHandler(async (req: Request, res: Response) 
         return;
     }
 
-    const record = emailOtpStore.get(email);
+    const normalizedEmail = email.trim().toLowerCase();
+    const record = await prisma.enquiryVerification.findFirst({
+        where: {
+            channel: "EMAIL",
+            email: normalizedEmail,
+            status: "PENDING",
+        },
+        orderBy: { createdAt: "desc" },
+    });
+
     if (!record) {
         res.status(400).json({ success: false, error: "No verification code found. Please request a new one." });
         return;
     }
-    if (Date.now() > record.expiresAt) {
-        emailOtpStore.delete(email);
+
+    if (Date.now() > record.expiresAt.getTime()) {
+        await prisma.enquiryVerification.update({
+            where: { id: record.id },
+            data: { status: "EXPIRED" },
+        });
         res.status(400).json({ success: false, error: "Code has expired. Please request a new one." });
         return;
     }
-    if (record.otp !== otp.toString()) {
+
+    if (record.otpHash !== hashOtp(normalizedEmail, otp.toString())) {
+        await prisma.enquiryVerification.update({
+            where: { id: record.id },
+            data: {
+                attemptCount: { increment: 1 },
+                ...(record.attemptCount >= 4 ? { status: "FAILED" } : {}),
+            },
+        });
         res.status(400).json({ success: false, error: "Invalid code. Please try again." });
         return;
     }
 
-    emailOtpStore.delete(email);
-    res.json({ success: true, message: "Email verified successfully." });
+    const verifiedAt = new Date();
+    const emailVerificationToken = createVerificationToken({
+        kind: "email_verification",
+        verificationId: record.id,
+        email: normalizedEmail,
+        exp: Date.now() + VERIFICATION_TOKEN_TTL_MS,
+    });
+
+    await prisma.enquiryVerification.update({
+        where: { id: record.id },
+        data: {
+            status: "VERIFIED",
+            verifiedAt,
+            tokenHash: hashValue(emailVerificationToken),
+        },
+    });
+
+    res.json({
+        success: true,
+        message: "Email verified successfully.",
+        emailVerificationToken,
+        verifiedAt,
+    });
 });
 
 // ── PHONE ──────────────────────────────────────────────────────────────────
@@ -87,27 +151,131 @@ export const sendPhoneOtpHandler = asyncHandler(async (req: Request, res: Respon
         return;
     }
 
-    const result = await sendPhoneOtp(phone);
+    const normalizedPhone = cleanPhone(phone);
+    const result = await sendPhoneOtp(normalizedPhone);
     if (!result.success) {
         res.status(500).json({ success: false, error: result.message });
         return;
     }
+
+    await prisma.enquiryVerification.create({
+        data: {
+            channel: "PHONE",
+            phone: normalizedPhone,
+            expiresAt: new Date(Date.now() + OTP_TTL_MS),
+            ipAddress: getIp(req),
+            userAgent: req.headers["user-agent"],
+        },
+    });
+
     res.json({ success: true, message: result.message });
 });
 
 export const confirmPhoneOtpHandler = asyncHandler(async (req: Request, res: Response) => {
-    const { phone, otp } = req.body;
+    const { phone, otp, email, emailVerificationToken } = req.body;
     if (!phone || !otp) {
         res.status(400).json({ success: false, error: "Phone and OTP are required." });
         return;
     }
 
-    const result = await verifyPhoneOtp(phone, otp);
+    let normalizedEmail: string | undefined;
+    let emailVerifiedAt: Date | undefined;
+    if (email || emailVerificationToken) {
+        if (!email || !emailVerificationToken) {
+            res.status(400).json({ success: false, error: "Email verification proof is incomplete." });
+            return;
+        }
+
+        normalizedEmail = email.trim().toLowerCase();
+        const emailPayload = verifySignedToken(emailVerificationToken);
+        if (
+            !emailPayload ||
+            emailPayload.kind !== "email_verification" ||
+            emailPayload.email !== normalizedEmail
+        ) {
+            res.status(400).json({ success: false, error: "Email verification proof is invalid or expired." });
+            return;
+        }
+
+        const emailRecord = await prisma.enquiryVerification.findFirst({
+            where: {
+                id: emailPayload.verificationId,
+                email: normalizedEmail,
+                channel: "EMAIL",
+                status: "VERIFIED",
+                tokenHash: hashValue(emailVerificationToken),
+            },
+        });
+        if (!emailRecord?.verifiedAt) {
+            res.status(400).json({ success: false, error: "Email verification proof could not be confirmed." });
+            return;
+        }
+        emailVerifiedAt = emailRecord.verifiedAt;
+    }
+
+    const normalizedPhone = cleanPhone(phone);
+    const result = await verifyPhoneOtp(normalizedPhone, otp);
     if (!result.valid) {
         res.status(400).json({ success: false, error: result.message });
         return;
     }
-    res.json({ success: true, message: result.message });
+
+    const record = await prisma.enquiryVerification.findFirst({
+        where: {
+            channel: "PHONE",
+            phone: normalizedPhone,
+            status: "PENDING",
+        },
+        orderBy: { createdAt: "desc" },
+    });
+
+    const verifiedAt = new Date();
+    const phoneVerification = record
+        ? await prisma.enquiryVerification.update({
+            where: { id: record.id },
+            data: {
+                status: "VERIFIED",
+                verifiedAt,
+                email: normalizedEmail,
+            },
+        })
+        : await prisma.enquiryVerification.create({
+            data: {
+                channel: "PHONE",
+                phone: normalizedPhone,
+                email: normalizedEmail,
+                status: "VERIFIED",
+                verifiedAt,
+                expiresAt: new Date(Date.now() + OTP_TTL_MS),
+                ipAddress: getIp(req),
+                userAgent: req.headers["user-agent"],
+            },
+        });
+
+    const verificationToken = createVerificationToken({
+        kind: "enquiry_verification",
+        verificationId: phoneVerification.id,
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        exp: Date.now() + VERIFICATION_TOKEN_TTL_MS,
+    });
+
+    await prisma.enquiryVerification.update({
+        where: { id: phoneVerification.id },
+        data: {
+            tokenHash: hashValue(verificationToken),
+        },
+    });
+
+    res.json({
+        success: true,
+        message: result.message,
+        verificationToken,
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        emailVerifiedAt,
+        phoneVerifiedAt: verifiedAt,
+    });
 });
 
 export const resendPhoneOtpHandler = asyncHandler(async (req: Request, res: Response) => {
@@ -117,10 +285,22 @@ export const resendPhoneOtpHandler = asyncHandler(async (req: Request, res: Resp
         return;
     }
 
-    const result = await resendPhoneOtp(phone);
+    const normalizedPhone = cleanPhone(phone);
+    const result = await resendPhoneOtp(normalizedPhone);
     if (!result.success) {
         res.status(500).json({ success: false, error: result.message });
         return;
     }
+
+    await prisma.enquiryVerification.create({
+        data: {
+            channel: "PHONE",
+            phone: normalizedPhone,
+            expiresAt: new Date(Date.now() + OTP_TTL_MS),
+            ipAddress: getIp(req),
+            userAgent: req.headers["user-agent"],
+        },
+    });
+
     res.json({ success: true, message: result.message });
 });
