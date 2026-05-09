@@ -9,6 +9,7 @@ import categoryRoutes from "./routes/category.routes";
 import uploadRoutes from "./routes/upload.routes";
 import { errorHandler } from "./middlewares/errorHandler";
 import { requestLogger } from "./middlewares/logger";
+import { isAllowedOrigin } from "./config/origins";
 
 import { toNodeHandler, fromNodeHeaders } from "better-auth/node";
 import { auth } from "./auth";
@@ -16,18 +17,12 @@ import { auth } from "./auth";
 const app = express();
 const port = ENV.PORT;
 
-// CORS - allow both frontend and admin origins
-const allowedOrigins = [
-    ENV.FRONTEND_URL,
-    ENV.ADMIN_URL,
-];
-
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (isAllowedOrigin(origin)) {
             callback(null, true);
         } else {
-            callback(new Error("Not allowed by CORS"));
+            callback(null, false);
         }
     },
     credentials: true,
@@ -37,6 +32,7 @@ app.use(cors({
 app.use("/api/auth", toNodeHandler(auth));
 
 // Middleware
+app.use("/uploads", express.static("uploads"));
 app.use(express.json());
 app.use(requestLogger);
 

@@ -12,9 +12,16 @@ interface VerificationCheckResponse {
 
 // Clean phone number to digits only (e.g. +91XXXXXXXXXX → 91XXXXXXXXXX)
 const cleanPhone = (phone: string) => phone.replace(/\D/g, "");
+const useLocalOtp = ENV.MSG91_AUTH_KEY.startsWith("local-dev");
+const localOtp = "123456";
 
 export const sendPhoneOtp = async (phone: string): Promise<VerificationResponse> => {
     const mobile = cleanPhone(phone);
+
+    if (useLocalOtp) {
+        console.log(`[MSG91] Local dev mode: OTP for ${mobile} is ${localOtp}`);
+        return { success: true, message: "Local dev OTP sent. Use 123456." };
+    }
 
     console.log("[MSG91] sendPhoneOtp called");
     console.log("[MSG91] Cleaned mobile:", mobile);
@@ -62,6 +69,12 @@ export const sendPhoneOtp = async (phone: string): Promise<VerificationResponse>
 export const verifyPhoneOtp = async (phone: string, otp: string): Promise<VerificationCheckResponse> => {
     const mobile = cleanPhone(phone);
 
+    if (useLocalOtp) {
+        return otp === localOtp
+            ? { valid: true, message: "Local dev OTP verified successfully" }
+            : { valid: false, message: "Invalid local dev OTP. Use 123456." };
+    }
+
     console.log("[MSG91] verifyPhoneOtp called | mobile:", mobile, "| otp:", otp);
 
     const url = `https://control.msg91.com/api/v5/otp/verify?mobile=${mobile}&otp=${otp}`;
@@ -97,6 +110,11 @@ export const verifyPhoneOtp = async (phone: string, otp: string): Promise<Verifi
 
 export const resendPhoneOtp = async (phone: string): Promise<VerificationResponse> => {
     const mobile = cleanPhone(phone);
+
+    if (useLocalOtp) {
+        console.log(`[MSG91] Local dev mode: resent OTP for ${mobile} is ${localOtp}`);
+        return { success: true, message: "Local dev OTP resent. Use 123456." };
+    }
 
     console.log("[MSG91] resendPhoneOtp called | mobile:", mobile);
 

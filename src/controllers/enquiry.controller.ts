@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { uploadToSupabase } from "../services/supabaseService";
 import { asyncHandler } from "../utils/asyncHandler";
+import { EnquiryStatus } from "../generated/prisma/enums";
 
 export const createEnquiry = asyncHandler(async (req: Request, res: Response) => {
     const { name, email, phone, message } = req.body;
@@ -47,8 +48,8 @@ export const updateEnquiryStatus = asyncHandler(async (req: Request, res: Respon
     const { id } = req.params;
     const { status } = req.body;
 
-    const valid = ["PENDING", "REVIEWED", "COMPLETED"];
-    if (!valid.includes(status)) {
+    const validStatuses = Object.values(EnquiryStatus);
+    if (typeof id !== "string" || !validStatuses.includes(status)) {
         res.status(400).json({ success: false, error: "Invalid status value." });
         return;
     }
