@@ -10,9 +10,15 @@ const localDevOrigins = localDevPorts.flatMap((port) => [
     `http://127.0.0.1:${port}`,
 ]);
 
+const additionalAllowedOrigins = ENV.ADDITIONAL_ALLOWED_ORIGINS
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
 export const allowedOrigins = Array.from(new Set([
     ENV.FRONTEND_URL,
     ENV.ADMIN_URL,
+    ...additionalAllowedOrigins,
     ...localDevOrigins,
 ]));
 

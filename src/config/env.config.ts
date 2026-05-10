@@ -8,6 +8,7 @@ export const ENV = {
     ADMIN_EMAIL: process.env.ADMIN_EMAIL!,
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD!,
     FRONTEND_URL: process.env.FRONTEND_URL!,
+    ADDITIONAL_ALLOWED_ORIGINS: process.env.ADDITIONAL_ALLOWED_ORIGINS || "",
     ADMIN_URL: process.env.ADMIN_URL!,
     SMTP_HOST: process.env.SMTP_HOST!,
     SMTP_PORT: parseInt(process.env.SMTP_PORT!),
