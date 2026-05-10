@@ -21,7 +21,7 @@ const getIp = (req: Request) => {
     return Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(",")[0] || req.ip;
 };
 
-const transporter = nodemailer.createTransport({
+const createTransporter = () => nodemailer.createTransport({
     host: ENV.SMTP_HOST,
     port: ENV.SMTP_PORT,
     secure: ENV.SMTP_PORT === 465,
@@ -52,7 +52,7 @@ export const sendEmailOtp = asyncHandler(async (req: Request, res: Response) => 
         },
     });
 
-    await transporter.sendMail({
+    await createTransporter().sendMail({
         from: ENV.SMTP_FROM,
         to: normalizedEmail,
         subject: "Heeman – Your Email Verification Code",

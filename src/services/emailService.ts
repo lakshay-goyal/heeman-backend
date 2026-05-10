@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { ENV } from "../config/env.config";
 
-const transporter = nodemailer.createTransport({
+const createTransporter = () => nodemailer.createTransport({
     host: ENV.SMTP_HOST,
     port: ENV.SMTP_PORT,
     secure: ENV.SMTP_PORT === 465, // true for 465, false for other ports
@@ -41,7 +41,7 @@ export const sendContactEmail = async (data: { name: string, email: string, subj
     };
 
     try {
-        await transporter.sendMail(mailOptions);
+        await createTransporter().sendMail(mailOptions);
         console.log(`[EMAIL] Contact inquiry sent successfully from ${data.email}`);
     } catch (error) {
         console.error("[EMAIL] Error sending contact email:", error);
