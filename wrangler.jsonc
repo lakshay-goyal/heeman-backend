@@ -5,6 +5,12 @@
   "workers_dev": true,
   "compatibility_date": "2026-05-10",
   "compatibility_flags": ["nodejs_compat"],
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "068abeb1f5f64701ac9a2ac73f1ac853"
+    }
+  ],
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
