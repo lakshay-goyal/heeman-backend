@@ -1,39 +1,37 @@
 import { ENV } from "../config/env.config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
+import { AsyncLocalStorage } from "node:async_hooks";
 
-let databaseUrlOverride: string | undefined;
-let activeConnectionString: string | undefined;
-let prismaClient: PrismaClient | undefined;
+const prismaStorage = new AsyncLocalStorage<PrismaClient>();
+let localPrismaClient: PrismaClient | undefined;
 
-export function setDatabaseUrl(connectionString: string | undefined) {
-    if (!connectionString || connectionString === databaseUrlOverride) return;
-
-    databaseUrlOverride = connectionString;
-
-    if (prismaClient && activeConnectionString !== connectionString) {
-        prismaClient.$disconnect().catch((error) => {
-            console.error("Failed to disconnect stale Prisma client", error);
-        });
-        prismaClient = undefined;
-        activeConnectionString = undefined;
-    }
+function createPrisma(connectionString: string) {
+    const adapter = new PrismaPg({ connectionString });
+    return new PrismaClient({ adapter });
 }
 
-function getConnectionString() {
-    return databaseUrlOverride || ENV.DATABASE_URL;
+export async function withPrismaConnection<T>(connectionString: string | undefined, callback: () => Promise<T> | T) {
+    const client = createPrisma(connectionString || ENV.DATABASE_URL);
+
+    try {
+        return await prismaStorage.run(client, callback);
+    } finally {
+        await client.$disconnect().catch((error) => {
+            console.error("Failed to disconnect Prisma client", error);
+        });
+    }
 }
 
 function getPrisma() {
-    const connectionString = getConnectionString();
+    const requestClient = prismaStorage.getStore();
+    if (requestClient) return requestClient;
 
-    if (!prismaClient || activeConnectionString !== connectionString) {
-        const adapter = new PrismaPg({ connectionString });
-        prismaClient = new PrismaClient({ adapter });
-        activeConnectionString = connectionString;
+    if (!localPrismaClient) {
+        localPrismaClient = createPrisma(ENV.DATABASE_URL);
     }
 
-    return prismaClient;
+    return localPrismaClient;
 }
 
 const prisma = new Proxy({} as PrismaClient, {
