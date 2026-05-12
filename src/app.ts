@@ -12,6 +12,7 @@ import verifyRoutes from "./routes/verify.routes";
 import billingRoutes from "./routes/billing.routes";
 import productEnquiryRoutes from "./routes/productEnquiry.routes";
 import whatsappRoutes from "./routes/whatsapp.routes";
+import adminAuthRoutes from "./routes/adminAuth.routes";
 import { errorHandler } from "./middlewares/errorHandler";
 import { requestLogger } from "./middlewares/logger";
 import { isAllowedOrigin } from "./config/origins";
@@ -51,6 +52,7 @@ app.get("/api/me", async (req, res) => {
     return res.json(session);
 });
 
+app.use("/api/admin-auth", adminAuthRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/wishlist", wishlistRoutes);
