@@ -7,12 +7,6 @@ import { allowedOrigins } from "./config/origins";
 export const auth = betterAuth({
     secret: ENV.BETTER_AUTH_SECRET,
     baseURL: ENV.BETTER_AUTH_URL,
-    advanced: {
-        defaultCookieAttributes: {
-            sameSite: "none",
-            secure: true,
-        },
-    },
     database: prismaAdapter(prisma, {
         provider: "postgresql",
     }),
