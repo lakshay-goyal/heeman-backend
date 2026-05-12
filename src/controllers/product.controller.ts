@@ -1,9 +1,31 @@
 import { Request, Response } from "express";
 import { productService } from "../services/product.service";
+import { ProductSortOption } from "../types/product.types";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export class ProductController {
     getAllProducts = asyncHandler(async (req: Request, res: Response) => {
+        if (Object.keys(req.query).length > 0) {
+            const page = parsePositiveNumber(req.query.page);
+            const limit = parsePositiveNumber(req.query.limit);
+            const minPrice = parseNumber(req.query.minPrice);
+            const maxPrice = parseNumber(req.query.maxPrice);
+
+            const products = await productService.getProductPage({
+                page,
+                limit,
+                search: parseString(req.query.search),
+                category: parseString(req.query.category),
+                material: parseString(req.query.material),
+                minPrice,
+                maxPrice,
+                sort: parseSort(req.query.sort),
+                topOnly: parseBoolean(req.query.top) || parseBoolean(req.query.isTopProduct),
+            });
+
+            return res.json(products);
+        }
+
         const products = await productService.getAllProducts();
         res.json(products);
     });
@@ -41,3 +63,27 @@ export class ProductController {
 }
 
 export const productController = new ProductController();
+
+function parseString(value: unknown) {
+    return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function parseNumber(value: unknown) {
+    if (typeof value !== "string" || !value.trim()) return undefined;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : undefined;
+}
+
+function parsePositiveNumber(value: unknown) {
+    const number = parseNumber(value);
+    return number && number > 0 ? number : undefined;
+}
+
+function parseBoolean(value: unknown) {
+    return value === "true" || value === "1" || value === true;
+}
+
+function parseSort(value: unknown): ProductSortOption | undefined {
+    const sort = parseString(value);
+    return sort === "price-low" || sort === "price-high" || sort === "name" || sort === "newest" ? sort : undefined;
+}

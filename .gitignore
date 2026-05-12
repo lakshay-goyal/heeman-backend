@@ -6,6 +6,7 @@ out
 dist
 *.tgz
 uploads
+.wrangler
 
 # code coverage
 coverage

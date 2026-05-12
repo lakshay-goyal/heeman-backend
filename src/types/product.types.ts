@@ -27,3 +27,17 @@ export interface CreateProductDTO {
 }
 
 export interface UpdateProductDTO extends Partial<CreateProductDTO> { }
+
+export type ProductSortOption = "newest" | "price-low" | "price-high" | "name";
+
+export interface ProductListQuery {
+    page?: number;
+    limit?: number;
+    search?: string;
+    category?: string;
+    material?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sort?: ProductSortOption;
+    topOnly?: boolean;
+}
