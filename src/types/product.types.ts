@@ -13,6 +13,7 @@ export interface CreateProductDTO {
     specialFeatures?: string[];
     tags?: string[];
     isTopProduct?: boolean;
+    topProductRank?: number | null;
     categoryId?: string;
     colors?: string[];
     productMaterial?: string;
@@ -40,4 +41,8 @@ export interface ProductListQuery {
     maxPrice?: number;
     sort?: ProductSortOption;
     topOnly?: boolean;
+}
+
+export interface ReorderTopProductsDTO {
+    productIds: string[];
 }

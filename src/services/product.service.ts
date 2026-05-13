@@ -10,6 +10,7 @@ export class ProductService {
         tags: true,
         series: true,
         isTopProduct: true,
+        topProductRank: true,
         productMaterial: true,
         material: true,
         categoryId: true,
@@ -27,7 +28,11 @@ export class ProductService {
 
     async getAllProducts() {
         return prisma.product.findMany({
-            orderBy: { createdAt: "desc" },
+            orderBy: [
+                { isTopProduct: "desc" },
+                { topProductRank: "asc" },
+                { createdAt: "desc" },
+            ],
             select: this.listSelect,
         });
     }
@@ -70,10 +75,14 @@ export class ProductService {
         }
 
         const orderBy =
-            query.sort === "price-low" ? { price: "asc" as const } :
-                query.sort === "price-high" ? { price: "desc" as const } :
-                    query.sort === "name" ? { name: "asc" as const } :
-                        { createdAt: "desc" as const };
+            query.topOnly ? [
+                { topProductRank: "asc" as const },
+                { createdAt: "desc" as const },
+            ] :
+                query.sort === "price-low" ? { price: "asc" as const } :
+                    query.sort === "price-high" ? { price: "desc" as const } :
+                        query.sort === "name" ? { name: "asc" as const } :
+                            { createdAt: "desc" as const };
 
         const [products, total, categories, materialRows] = await prisma.$transaction([
             prisma.product.findMany({
@@ -161,6 +170,15 @@ export class ProductService {
         const { images, ...productData } = data;
 
         let updateData: any = { ...productData };
+        if (productData.isTopProduct === false) {
+            updateData.topProductRank = null;
+        } else if (productData.isTopProduct === true && productData.topProductRank === undefined) {
+            const currentMax = await prisma.product.aggregate({
+                where: { isTopProduct: true },
+                _max: { topProductRank: true },
+            });
+            updateData.topProductRank = (currentMax._max.topProductRank || 0) + 1;
+        }
 
         if (images) {
             updateData.images = {
@@ -196,6 +214,39 @@ export class ProductService {
             }
             throw error;
         }
+    }
+
+    async reorderTopProducts(productIds: string[]) {
+        const uniqueProductIds = Array.from(new Set(productIds.filter(Boolean)));
+
+        return prisma.$transaction(async (tx) => {
+            await tx.product.updateMany({
+                where: {
+                    isTopProduct: true,
+                    id: { notIn: uniqueProductIds },
+                },
+                data: {
+                    topProductRank: null,
+                },
+            });
+
+            await Promise.all(uniqueProductIds.map((id, index) => tx.product.update({
+                where: { id },
+                data: {
+                    isTopProduct: true,
+                    topProductRank: index + 1,
+                },
+            })));
+
+            return tx.product.findMany({
+                where: { isTopProduct: true },
+                orderBy: [
+                    { topProductRank: "asc" },
+                    { createdAt: "desc" },
+                ],
+                select: this.listSelect,
+            });
+        });
     }
 }
 

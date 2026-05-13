@@ -55,6 +55,12 @@ export class ProductController {
         res.json(product);
     });
 
+    reorderTopProducts = asyncHandler(async (req: Request, res: Response) => {
+        const productIds = Array.isArray(req.body.productIds) ? req.body.productIds : [];
+        const products = await productService.reorderTopProducts(productIds);
+        res.json(products);
+    });
+
     deleteProduct = asyncHandler(async (req: Request, res: Response) => {
         const id = req.params.id as string;
         await productService.deleteProduct(id);

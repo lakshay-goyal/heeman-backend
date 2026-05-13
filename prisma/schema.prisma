@@ -92,6 +92,7 @@ model Product {
   specialFeatures String[]
   tags            String[]
   isTopProduct    Boolean        @default(false)
+  topProductRank  Int?
 
   // Specs
   productMaterial    String?
