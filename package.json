@@ -7,7 +7,8 @@
     "start": "bun run src/index.ts",
     "dev": "bun --watch src/index.ts",
     "seed": "bun run src/seed.ts",
-    "build": "bun x prisma migrate deploy && bun x prisma generate && bun src/index.ts"
+    "build": "bun x prisma generate",
+    "migrate:deploy": "bun x prisma migrate deploy"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -20,8 +21,11 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1101.0",
+    "@aws-sdk/s3-request-presigner": "^3.1101.0",
     "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.7.0",
+    "@supabase/server": "^1.4.1",
     "@supabase/supabase-js": "^2.100.1",
     "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.19",
