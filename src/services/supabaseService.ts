@@ -4,7 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const supabaseUrl = ENV.SUPABASE_URL || "";
-const supabaseKey = ENV.SUPABASE_KEY || "";
+const supabaseKey = ENV.SUPABASE_SECRET_KEY || "";
 const useLocalStorage = supabaseUrl.includes("localhost:54321") || supabaseKey.startsWith("local-dev");
 
 export const supabaseClient = createClient(supabaseUrl, supabaseKey);
